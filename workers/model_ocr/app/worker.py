@@ -38,7 +38,7 @@ class OCRWorker(BaseWorker):
             logging.warning(f"Archivo no encontrado, saltando: {file_path}")
             return {"result": None, "error": "file_not_found"}
 
-        # Solo procesa este archivo, no recorre directorios
+        
         ocr_result = self.model.predict(file_path)
 
         # Convierte cualquier numpy/int64 a serializable y protege bbox
