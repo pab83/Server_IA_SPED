@@ -1,0 +1,17 @@
+# Entornos virtuales
+venv/
+env/
+*.env
+
+# IA / Modelos (No subir archivos de varios GB)
+*.onnx
+*.pth
+*.bin
+
+# Python
+__pycache__/
+*.pyc
+
+# BBDD y archivos de datos
+*.db
+share/

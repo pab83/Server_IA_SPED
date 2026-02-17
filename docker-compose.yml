@@ -1,0 +1,74 @@
+
+services:
+
+  redis:
+    image: redis:7-alpine
+    container_name: rpr-redis
+    ports:
+      - ${REDIS_PORT}:${REDIS_PORT}
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redisdata:/data
+    networks:
+      - rpr-net
+
+  worker_ocr:
+    build:
+      context: .
+      dockerfile: workers/model_ocr/Dockerfile
+    # container_name: worker-ocr
+    mem_limit: 32g   
+    environment:
+      REDIS_HOST: ${REDIS_HOST}
+    volumes:
+      - ../../../../mnt/share:/data:ro
+
+      - hf_cache:/root/.cache/huggingface
+    networks:
+      - rpr-net
+    restart: unless-stopped
+
+
+  worker_moondream:
+    build:
+      context: .
+      dockerfile: workers/model_moondream/Dockerfile
+    container_name: worker-moondream
+    environment:
+      REDIS_HOST: ${REDIS_HOST}
+    volumes:
+      - /mnt/share:/data:ro
+    networks:
+      - rpr-net
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    runtime: nvidia
+    restart: unless-stopped
+  
+  worker_embeddings:
+    build:
+      context: .
+      dockerfile: workers/model_embeddings/Dockerfile
+    container_name: worker-embeddings
+    environment:
+      REDIS_HOST: ${REDIS_HOST}
+    volumes:
+      - /mnt/share:/data:ro
+      - hf_cache:/root/.cache/huggingface
+    networks:
+      - rpr-net
+    restart: unless-stopped
+
+networks:
+  rpr-net:
+    driver: bridge
+
+volumes:
+  hf_cache:
+  redisdata:
+

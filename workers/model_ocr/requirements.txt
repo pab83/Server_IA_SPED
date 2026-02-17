@@ -1,0 +1,8 @@
+numpy<2
+easyocr
+opencv-python-headless
+pydantic
+redis
+pdf2image
+Pillow
+
