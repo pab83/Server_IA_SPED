@@ -6,7 +6,7 @@ MODEL_ID = "sentence-transformers/all-MiniLM-L6-v2"
 
 class EmbeddingModel:
     """
-    Wrapper profesional para generar embeddings con SentenceTransformer.
+    Wrapper para generar embeddings con SentenceTransformer.
     
     """
 

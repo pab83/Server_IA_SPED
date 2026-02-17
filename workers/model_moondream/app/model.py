@@ -5,49 +5,61 @@ from PIL import Image
 
 MODEL_ID = "vikhyatk/moondream2"
 
+
 class MoondreamModel:
     """
-    Wrapper profesional para Moondream2.
-    Compatible con BaseWorker.
+    Wrapper para Moondream2.
     """
 
     def __init__(self, device: str = None):
         """
-        device: "cuda" o "cpu". Por defecto detecta automáticamente.
+        device: "cuda" o "cpu". Detecta automáticamente si no se especifica.
         """
         self.model = None
         self.tokenizer = None
-        self.device = device or ("cpu" if torch.cuda.is_available() else "cpu")
+        self.device = device or ("cuda" if torch.cuda.is_available() else "cpu")
 
     def load(self):
         """
-        Carga el modelo y tokenizer en el dispositivo especificado.
-        Lazy load: solo se carga la primera vez.
+        Carga el modelo y tokenizer una sola vez (lazy load).
         """
-        if self.model is None:
-            logging.info(f"Cargando Moondream {MODEL_ID} en {self.device}")
+        if self.model is not None:
+            return
 
-            try:
-                self.tokenizer = AutoTokenizer.from_pretrained(MODEL_ID)
+        logging.info(f"Cargando Moondream {MODEL_ID} en {self.device}")
 
-                self.model = AutoModelForCausalLM.from_pretrained(
-                    MODEL_ID,
-                    torch_dtype=torch.float16 if self.device == "cuda" else torch.float32,
-                    device_map="auto" if self.device == "cuda" else None
-                )
+        try:
+            self.tokenizer = AutoTokenizer.from_pretrained(
+                MODEL_ID,
+                trust_remote_code=True
+            )
 
-                self.model.eval()
-            except Exception as e:
-                logging.exception("Error cargando MoondreamModel")
-                raise e
+            self.model = AutoModelForCausalLM.from_pretrained(
+                MODEL_ID,
+                trust_remote_code=True,
+                torch_dtype=torch.float16 if self.device == "cuda" else torch.float32,
+                device_map="auto" if self.device == "cuda" else None
+            )
+
+            if self.device == "cpu":
+                self.model.to("cpu")
+
+            self.model.eval()
+
+            logging.info("Moondream cargado correctamente.")
+
+        except Exception as e:
+            logging.exception("Error cargando MoondreamModel")
+            raise e
 
     @torch.no_grad()
     def predict(self, image_path: str, prompt: str) -> str:
         """
-        Genera un caption/descripción para la imagen dada.
+        Genera caption para una imagen usando Moondream.
         """
         if not image_path:
             raise ValueError("Debe indicar la ruta del archivo para Moondream")
+
         if not prompt:
             raise ValueError("Debe proporcionar un prompt para Moondream")
 
@@ -56,17 +68,20 @@ class MoondreamModel:
         try:
             image = Image.open(image_path).convert("RGB")
 
-            # Tokenizar prompt
-            inputs = self.tokenizer(prompt, return_tensors="pt").to(self.device)
+            # Encode image
+            image_embeds = self.model.encode_image(image)
 
-            # Generar salida
-            output = self.model.generate(**inputs, max_new_tokens=128)
-
-            response = self.tokenizer.decode(output[0], skip_special_tokens=True)
+            # Generate response
+            response = self.model.answer_question(
+                image_embeds,
+                prompt,
+                self.tokenizer
+            )
 
             return response
 
         except Exception as e:
-            logging.exception(f"Error generando caption Moondream para {image_path}")
+            logging.exception(
+                f"Error generando caption Moondream para {image_path}"
+            )
             raise e
-
