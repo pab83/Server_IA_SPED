@@ -6,7 +6,9 @@ from typing import Callable
 from datetime import datetime, date
 from .base import BaseQueueClient
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.INFO,
+                    format="%(asctime)s - %(levelname)s - %(message)s"
+                    )
 
 class RedisQueueClient(BaseQueueClient):
     """

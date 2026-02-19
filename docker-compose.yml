@@ -33,21 +33,15 @@ services:
     build:
       context: .
       dockerfile: workers/model_moondream/Dockerfile
-    container_name: worker-moondream
+    #container_name: worker-moondream
     environment:
       REDIS_HOST: ${REDIS_HOST}
+      OMP_NUM_THREADS: 1  # Limitar el número de threads para operaciones paralelas
+      MKL_NUM_THREADS: 1  #
     volumes:
       - /mnt/share:/data:ro
     networks:
       - rpr-net
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: 1
-              capabilities: [gpu]
-    runtime: nvidia
     restart: unless-stopped
   
   worker_embeddings:
