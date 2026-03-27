@@ -1,6 +1,6 @@
 import logging
 from abc import ABC, abstractmethod
-from datetime import datetime
+from datetime import datetime , timezone
 from schemas.task import TaskMessage
 from schemas.result import ResultMessage, Status
 from lifecycle import publish_result
@@ -47,17 +47,25 @@ class BaseWorker(ABC):
         return mark_processed(redis_conn, task.target_model, task.message_id)
 
     def build_result(self, task: TaskMessage, result_data: dict) -> ResultMessage:
-        """
-        Construye ResultMessage completo.
-        """
-        return ResultMessage(
-            message_id=task.message_id,
-            correlation_id=task.correlation_id,
-            model=self.__class__.__name__,
-            status=Status.SUCCESS,
-            processing_time_ms=int((datetime.utcnow() - task.timestamp).total_seconds() * 1000),
-            **result_data
-        )
+            """
+            Construye ResultMessage completo.
+            Gestiona la resta de datetimes con y sin zona horaria (UTC).
+            """
+            # Obtenemos la hora actual con zona horaria UTC explícita
+            now = datetime.now(timezone.utc)
+            
+            # Calculamos la diferencia asegurándonos de que ambos tengan tz
+            diff = now - task.timestamp
+            processing_time_ms = int(diff.total_seconds() * 1000)
+
+            return ResultMessage(
+                message_id=task.message_id,
+                correlation_id=task.correlation_id,
+                model=self.__class__.__name__,
+                status=Status.SUCCESS,
+                processing_time_ms=processing_time_ms,
+                **result_data
+            )
 
     def handle_failure(self, task: TaskMessage):
         """

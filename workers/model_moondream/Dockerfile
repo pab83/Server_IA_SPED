@@ -7,10 +7,10 @@ RUN apt-get update && \
     apt-get install -y git build-essential libssl-dev && \
     rm -rf /var/lib/apt/lists/*
 
-RUN pip install --no-cache-dir "transformers==4.56.1"
+RUN pip install --no-cache-dir --default-timeout=1000 "transformers==4.56.1"
 
 COPY workers/model_moondream/requirements.txt ./requirements.txt
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir --default-timeout=1000 -r requirements.txt
 
 COPY common/schemas ./schemas
 COPY common/reliability ./reliability

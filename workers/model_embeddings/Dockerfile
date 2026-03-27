@@ -11,7 +11,7 @@ WORKDIR /app
 
 # Requisitos específicos del worker de embeddings
 COPY workers/model_embeddings/requirements.txt ./requirements.txt
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir --default-timeout=1000 -r requirements.txt
 
 # Código compartido (schemas, reliability, messaging, base worker)
 COPY common/schemas ./schemas

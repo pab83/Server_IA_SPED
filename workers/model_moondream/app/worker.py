@@ -31,7 +31,7 @@ class MoondreamWorker(BaseWorker):
             raise ValueError("Payload no contiene 'file_path'")
 
         # Logging mínimo para no saturar disco
-        logging.debug(f"Procesando archivo: {file_path}")
+        logging.info(f"Procesando archivo: {file_path}")
 
         caption = self.model.predict(file_path, prompt)
         return {"result": caption}

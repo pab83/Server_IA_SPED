@@ -6,7 +6,7 @@ services:
     container_name: rpr-redis
     ports:
       - ${REDIS_PORT}:${REDIS_PORT}
-    command: ["redis-server", "--appendonly", "yes"]
+    command: ["redis-server", "--appendonly", "yes",--timeout 0,--tcp-keepalive 60]
     volumes:
       - redisdata:/data
     networks:
@@ -21,8 +21,8 @@ services:
     environment:
       REDIS_HOST: ${REDIS_HOST}
     volumes:
-      - ../../../../mnt/share:/data:ro
-
+      - /home/pablo/Server_IA_SPED/demo:/demo:ro
+      - /mnt/share:/data:ro
       - hf_cache:/root/.cache/huggingface
     networks:
       - rpr-net
@@ -39,6 +39,7 @@ services:
       OMP_NUM_THREADS: 1  # Limitar el número de threads para operaciones paralelas
       MKL_NUM_THREADS: 1  #
     volumes:
+      - /home/pablo/Server_IA_SPED/demo:/demo:ro
       - /mnt/share:/data:ro
     networks:
       - rpr-net
@@ -52,6 +53,7 @@ services:
     environment:
       REDIS_HOST: ${REDIS_HOST}
     volumes:
+      - /home/pablo/Server_IA_SPED/demo:/demo:ro
       - /mnt/share:/data:ro
       - hf_cache:/root/.cache/huggingface
     networks:

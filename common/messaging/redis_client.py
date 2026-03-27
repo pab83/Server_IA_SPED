@@ -33,7 +33,13 @@ class RedisQueueClient(BaseQueueClient):
         logging.info(f"Escuchando cola {queue_name}")
         while True:
             try:
-                _, raw = self.r.brpop(queue_name)
+                
+                result = self.r.brpop(queue_name, timeout=5)  # ← timeout para no bloquear
+                if result is None:
+                    logging.debug("Timeout sin mensaje, reintentando...")
+                    continue
+                _, raw = result
+                logging.info("Mensaje recibido, procesando...")  
                 msg = json.loads(raw)
                 callback(msg)
             except Exception:

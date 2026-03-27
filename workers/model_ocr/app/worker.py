@@ -38,30 +38,7 @@ class OCRWorker(BaseWorker):
             logging.warning(f"Archivo no encontrado, saltando: {file_path}")
             return {"result": None, "error": "file_not_found"}
 
-        
+        # model.predict() ya devuelve datos normalizados y JSON serializables
+        # {"text": "...", "raw": [[{"text": "...", "confidence": 0.9}, ...], ...]}
         ocr_result = self.model.predict(file_path)
-
-        # Convierte cualquier numpy/int64 a serializable y protege bbox
-        ocr_result_serializable = {
-            "text": str(ocr_result.get("text", "")),
-            "raw": []
-        }
-
-        for page in ocr_result.get("raw", []):
-            page_normalized = []
-            for r in page:
-                try:
-                    # r[0] = bbox, r[1] = texto, r[2] = confidence
-                    bbox = [int(x) for x in r[0]] if isinstance(r[0], (list, tuple)) else None
-                    text = str(r[1])
-                    confidence = float(r[2]) if len(r) > 2 else 0.5  # default confidence
-                    page_normalized.append({"bbox": bbox, "text": text, "confidence": confidence})
-                except Exception as e:
-                    logging.warning(f"Error normalizando OCR: {e}, saltando r={r}")
-                    continue
-            ocr_result_serializable["raw"].append(page_normalized)
-
-
-        return {"result": ocr_result_serializable}
-
-    
+        return {"result": ocr_result}
